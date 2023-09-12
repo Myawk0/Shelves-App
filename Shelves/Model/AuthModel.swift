@@ -7,7 +7,11 @@
 
 import Foundation
 
-struct AuthModel {
+struct UserData {
     var email: String
     var password: String
+}
+
+struct AuthModel {
+    static let loginData = UserData(email: "", password: "")
 }
