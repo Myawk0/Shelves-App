@@ -16,6 +16,15 @@ class AuthView: UIView {
     
     weak var delegate: AuthViewDelegate?
     
+    private lazy var verticalStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 13
+        stackView.distribution = .fill
+        stackView.alignment = .lastBaseline
+        return stackView
+    }()
+    
     // MARK: - Title
     
     private lazy var titleLabel: UILabel = {
@@ -34,15 +43,10 @@ class AuthView: UIView {
         textField.layer.borderColor = UIColor.lightGrayColor.cgColor
         textField.layer.borderWidth = 1
         textField.layer.cornerRadius = 8
-        textField.setLeftPaddingPoints(40)
-        textField.setRightPaddingPoints(20)
+        let emailIcon = UIImage(named: "profile")
+        textField.setLeftPaddingIcon(emailIcon, padding: 37)
+        textField.setRightPaddingPoints(15)
         return textField
-    }()
-    
-    private lazy var emailIcon: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = UIImage(named: "profile")
-        return imageView
     }()
     
     // MARK: - TextField "Password"
@@ -57,22 +61,23 @@ class AuthView: UIView {
         textField.layer.borderColor = UIColor.lightGrayColor.cgColor
         textField.layer.borderWidth = 1
         textField.layer.cornerRadius = 8
-        textField.setLeftPaddingPoints(40)
-        textField.setRightPaddingPoints(20)
+        let passwordIcon = UIImage(named: "lock")
+        textField.setLeftPaddingIcon(passwordIcon, padding: 37)
+        textField.setRightPaddingIcon(for: eyeIcon, padding: 37, with: eyeView)
         return textField
     }()
     
-    private lazy var passwordIcon: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = UIImage(named: "lock")
-        return imageView
+    private lazy var eyeView: UIView = {
+        let view = UIView()
+        view.isUserInteractionEnabled = true
+        return view
     }()
     
-    private lazy var showPasswordIcon: UIImageView = {
+    private lazy var eyeIcon: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(named: "showPassword")?.withRenderingMode(.alwaysTemplate)
         imageView.tintColor = .black
-        imageView.isUserInteractionEnabled = true
+        imageView.contentMode = .center
         return imageView
     }()
     
@@ -193,7 +198,7 @@ class AuthView: UIView {
     
     private func setupShowPassword() {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(showPasswordIconTapped))
-        showPasswordIcon.addGestureRecognizer(tapGesture)
+        eyeView.addGestureRecognizer(tapGesture)
     }
     
     // MARK: - Method for "Eye" icon
@@ -202,30 +207,27 @@ class AuthView: UIView {
     @objc private func showPasswordIconTapped() {
         let color = delegate?.togglePasswordVisibility()
         passwordTextField.isSecureTextEntry.toggle()
-        showPasswordIcon.tintColor = color
+        eyeIcon.tintColor = color
     }
     
     // MARK: - Subviews
     private func addSubviews() {
-        addSubview(titleLabel)
+        addSubview(verticalStackView)
+        verticalStackView.addArrangedSubview(titleLabel)
         
-        emailTextField.addSubview(emailIcon)
-        addSubview(emailTextField)
+        verticalStackView.addArrangedSubview(emailTextField)
+        verticalStackView.addArrangedSubview(passwordTextField)
         
-        passwordTextField.addSubview(passwordIcon)
-        passwordTextField.addSubview(showPasswordIcon)
-        addSubview(passwordTextField)
-        
-        addSubview(forgotPasswordButton)
-        addSubview(loginButton)
+        verticalStackView.addArrangedSubview(forgotPasswordButton)
+        verticalStackView.addArrangedSubview(loginButton)
         
         integrationStackView.addArrangedSubview(leftLine)
         integrationStackView.addArrangedSubview(loginUsingIntegrationLabel)
         integrationStackView.addArrangedSubview(rightLine)
-        addSubview(integrationStackView)
+        verticalStackView.addArrangedSubview(integrationStackView)
         
         loginWithGoogleButton.addSubview(googleIcon)
-        addSubview(loginWithGoogleButton)
+        verticalStackView.addArrangedSubview(loginWithGoogleButton)
         
         registrationStackView.addArrangedSubview(notHaveAccountLabel)
         registrationStackView.addArrangedSubview(registerButton)
@@ -235,66 +237,50 @@ class AuthView: UIView {
     // MARK: - Constraints
     private func applyConstraints() {
         
-        titleLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview().inset(250)
-            make.leading.equalToSuperview().inset(23)
-            make.trailing.greaterThanOrEqualToSuperview().inset(315)
+        verticalStackView.snp.makeConstraints { make in
+            make.centerY.equalToSuperview().offset(-40)
+            make.leading.trailing.equalToSuperview().inset(23)
         }
         
-        emailIcon.snp.makeConstraints { make in
-            make.width.height.equalTo(20)
-            make.centerY.equalToSuperview()
-            make.leading.equalToSuperview().inset(10)
+        titleLabel.snp.makeConstraints { make in
+            make.leading.equalToSuperview()
         }
         
         emailTextField.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(15)
-            make.leading.trailing.equalToSuperview().inset(23)
+            make.leading.trailing.equalToSuperview()
             make.height.equalTo(46)
-        }
-        
-        passwordIcon.snp.makeConstraints { make in
-            make.width.height.equalTo(20)
-            make.centerY.equalToSuperview()
-            make.leading.equalToSuperview().inset(10)
-        }
-        
-        showPasswordIcon.snp.makeConstraints { make in
-            make.width.height.equalTo(20)
-            make.centerY.equalToSuperview()
-            make.trailing.equalToSuperview().inset(10)
         }
         
         passwordTextField.snp.makeConstraints { make in
-            make.top.equalTo(emailTextField.snp.bottom).offset(15)
-            make.leading.trailing.equalToSuperview().inset(23)
+            make.leading.trailing.equalToSuperview()
             make.height.equalTo(46)
         }
         
-        forgotPasswordButton.snp.makeConstraints { make in
-            make.top.equalTo(passwordTextField.snp.bottom).offset(10)
-            make.trailing.equalTo(passwordTextField.snp.trailing)
-        }
+        verticalStackView.setCustomSpacing(2, after: passwordTextField)
         
+        forgotPasswordButton.snp.makeConstraints { make in
+            make.trailing.equalToSuperview()
+        }
+    
         loginButton.snp.makeConstraints { make in
-            make.top.equalTo(forgotPasswordButton.snp.bottom).offset(15)
-            make.leading.trailing.equalToSuperview().inset(23)
+            make.leading.trailing.equalToSuperview()
             make.height.equalTo(52)
         }
         
         leftLine.snp.makeConstraints { make in
             make.height.equalTo(1)
-            make.width.equalTo(121)
+            let width = UIScreen.main.bounds.width * 0.319
+            make.width.equalTo(width)
         }
         
         rightLine.snp.makeConstraints { make in
             make.height.equalTo(1)
-            make.width.equalTo(121)
+            let width = UIScreen.main.bounds.width * 0.319
+            make.width.equalTo(width)
         }
         
         integrationStackView.snp.makeConstraints { make in
-            make.top.equalTo(loginButton.snp.bottom).offset(20)
-            make.leading.trailing.equalToSuperview().inset(23)
+            make.height.equalTo(30)
         }
         
         googleIcon.snp.makeConstraints { make in
@@ -304,13 +290,12 @@ class AuthView: UIView {
         }
         
         loginWithGoogleButton.snp.makeConstraints { make in
-            make.top.equalTo(integrationStackView.snp.bottom).offset(15)
-            make.leading.trailing.equalToSuperview().inset(23)
+            make.leading.trailing.equalToSuperview()
             make.height.equalTo(48)
         }
         
         registrationStackView.snp.makeConstraints { make in
-            make.bottom.equalToSuperview().inset(40)
+            make.bottom.equalToSuperview().inset(35)
             make.leading.trailing.greaterThanOrEqualToSuperview().inset(50)
         }
     }
