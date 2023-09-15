@@ -9,6 +9,8 @@ import UIKit
 
 class NewView: UIView {
     
+    // MARK: - StackView
+    
     private lazy var verticalStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
@@ -16,6 +18,8 @@ class NewView: UIView {
         stackView.alignment = .center
         return stackView
     }()
+    
+    // MARK: - Labels
     
     private lazy var loginLabel: UILabel = {
         let label = UILabel()
@@ -31,6 +35,8 @@ class NewView: UIView {
         return label
     }()
     
+    // MARK: - Init
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .white
@@ -43,19 +49,27 @@ class NewView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // MARK: - Method to apply a text for "Login"
+    
     func setupLogin(with text: String) {
         loginLabel.text = "Login: \(text)"
     }
     
+    // MARK: - Method to apply a text for "Password"
+    
     func setupPassword(with text: String) {
         passwordLabel.text = "Password: \(text)"
     }
+    
+    // MARK: - Subviews
     
     private func addSubviews() {
         addSubview(verticalStackView)
         verticalStackView.addArrangedSubview(loginLabel)
         verticalStackView.addArrangedSubview(passwordLabel)
     }
+    
+    // MARK: - Constraints
     
     private func applyConstraints() {
         verticalStackView.snp.makeConstraints { make in

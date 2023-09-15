@@ -11,8 +11,12 @@ import Firebase
 
 class AuthController: UIViewController {
     
+    // MARK: - Views
+    
     private let authView: AuthView
     private var user: User?
+    
+    // MARK: - Property to show / hide password
     
     private var passwordIsVisible: Bool
     
@@ -43,17 +47,23 @@ class AuthController: UIViewController {
         return passwordIsVisible ? .systemBlue : .black
     }
     
+    // MARK: - Method to check if "Email" is validate
+    
     func isValidEmail(_ email: String) -> Bool {
         let emailRegex = "[A-Za-z0-9]+@+[A-Za-z]+\\.[A-Za-z]+"
         let emailPredicate = NSPredicate(format: "SELF MATCHES %@", emailRegex)
         return emailPredicate.evaluate(with: email)
     }
     
+    // MARK: - Method to check if "Password" is validate
+    
     func isValidPassword(_ password: String) -> Bool {
         let passwordRegex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@#&?!])[A-Za-z\\d@#&?!]{8,20}$"
         let passwordTest = NSPredicate(format: "SELF MATCHES %@", passwordRegex)
         return passwordTest.evaluate(with: password)
     }
+    
+    // MARK: - Method to Sign In with "Email" and "Password"
     
     func signInAuth(completion: @escaping (Bool) -> Void) {
         guard let email = user?.email, let password = user?.password else { return }
@@ -77,12 +87,16 @@ class AuthController: UIViewController {
         }
     }
     
+    // MARK: - Method to setup a configuration for GIDSignIn
+    
     private func setupGoogleSignIn() {
         guard let clientID = FirebaseApp.app()?.options.clientID else { return }
         
         let config = GIDConfiguration(clientID: clientID)
         GIDSignIn.sharedInstance.configuration = config
     }
+    
+    // MARK: - Method to Sign In with "Google"
     
     func googleSignIn() {
         setupGoogleSignIn()

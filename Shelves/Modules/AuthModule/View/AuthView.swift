@@ -196,6 +196,8 @@ class AuthView: UIView {
         return button
     }()
     
+    // MARK: - Property to control validate data in textFields
+    
     private lazy var isTextFieldCorrect: Bool = true {
         didSet {
             changeTextFieldAppearance(with: emailTextField)
@@ -220,10 +222,14 @@ class AuthView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // MARK: - Delegates
+    
     private func setupDelegates() {
         emailTextField.delegate = self
         passwordTextField.delegate = self
     }
+    
+    // MARK: - Method when textField are edited
     
     @objc func textFieldsDidChange() {
         guard let email = emailTextField.text, let password = passwordTextField.text else { return }
@@ -234,6 +240,8 @@ class AuthView: UIView {
             loginButton.backgroundColor = isCorrect ? .blueColor : .blueColor.withAlphaComponent(0.6)
         }
     }
+    
+    // MARK: - Method of "Login with Google" button
     
     @objc func googleSignIn() {
         delegate?.signInGoogleAuthentication()
@@ -256,10 +264,14 @@ class AuthView: UIView {
         eyeIcon.tintColor = color
     }
     
+    // MARK: - Method for changing apperance of textFields
+    
     func changeTextFieldAppearance(with textField: UITextField) {
         textField.textColor = isTextFieldCorrect ? .black : .systemRed
         textField.layer.borderColor = isTextFieldCorrect ? UIColor.lightGrayColor.cgColor : UIColor.systemRed.cgColor
     }
+    
+    // MARK: - Method of "Login" button
     
     @objc private func loginButtonTapped() {
         delegate?.signInAuthentication { result in

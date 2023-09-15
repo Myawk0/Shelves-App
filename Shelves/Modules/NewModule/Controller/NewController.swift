@@ -9,7 +9,11 @@ import UIKit
 
 class NewController: UIViewController {
     
+    // MARK: - Views
+    
     private let newView: NewView
+    
+    // MARK: - Init
     
     init(email: String, password: String) {
         self.newView = NewView()
@@ -29,6 +33,4 @@ class NewController: UIViewController {
         super.loadView()
         self.view = newView
     }
-    
-    
 }
