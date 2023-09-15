@@ -10,6 +10,7 @@ import SnapKit
 
 protocol AuthViewDelegate: AnyObject {
     func togglePasswordVisibility() -> UIColor
+    func checkValidation(email: String, password: String) -> Bool
 }
 
 class AuthView: UIView {
@@ -46,6 +47,7 @@ class AuthView: UIView {
         let emailIcon = UIImage(named: "profile")
         textField.setLeftPaddingIcon(emailIcon, padding: 37)
         textField.setRightPaddingPoints(15)
+        textField.addTarget(self, action: #selector(textFieldsDidChange), for: .editingChanged)
         return textField
     }()
     
@@ -64,6 +66,7 @@ class AuthView: UIView {
         let passwordIcon = UIImage(named: "lock")
         textField.setLeftPaddingIcon(passwordIcon, padding: 37)
         textField.setRightPaddingIcon(for: eyeIcon, padding: 37, with: eyeView)
+        textField.addTarget(self, action: #selector(textFieldsDidChange), for: .editingChanged)
         return textField
     }()
     
@@ -96,11 +99,21 @@ class AuthView: UIView {
         button.setTitle("Войти", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-        button.backgroundColor = .blueColor
+        button.backgroundColor = .blueColor.withAlphaComponent(0.6)
         button.layer.cornerRadius = 6
-        //button.addTarget(self, action: #selector(loginButtonTapped), for: .touchUpInside)
+        button.isEnabled = false
+        button.addTarget(self, action: #selector(loginButtonTapped), for: .touchUpInside)
         return button
     }()
+    
+    @objc func textFieldsDidChange() {
+        guard let email = emailTextField.text, let password = passwordTextField.text else { return }
+        
+        if let isCorrect = delegate?.checkValidation(email: email, password: password) {
+            loginButton.isEnabled = isCorrect
+            loginButton.backgroundColor = isCorrect ? .blueColor : .blueColor.withAlphaComponent(0.6)
+        }
+    }
     
     // MARK: - Integration Label with lines
     
@@ -208,6 +221,9 @@ class AuthView: UIView {
         let color = delegate?.togglePasswordVisibility()
         passwordTextField.isSecureTextEntry.toggle()
         eyeIcon.tintColor = color
+    }
+    
+    @objc private func loginButtonTapped() {
     }
     
     // MARK: - Subviews
