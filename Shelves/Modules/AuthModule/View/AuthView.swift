@@ -11,6 +11,8 @@ import SnapKit
 protocol AuthViewDelegate: AnyObject {
     func togglePasswordVisibility() -> UIColor
     func checkValidation(email: String, password: String) -> Bool
+    func signInAuthentication(completion: @escaping (Bool) -> Void)
+    func signInGoogleAuthentication()
 }
 
 class AuthView: UIView {
@@ -41,6 +43,7 @@ class AuthView: UIView {
         let textField = UITextField()
         let placeholderAttributes: [NSAttributedString.Key: Any] = [.foregroundColor: UIColor.grayColor]
         textField.attributedPlaceholder = NSAttributedString(string: "Введите электронную почту", attributes: placeholderAttributes)
+        textField.spellCheckingType = .no
         textField.layer.borderColor = UIColor.lightGrayColor.cgColor
         textField.layer.borderWidth = 1
         textField.layer.cornerRadius = 8
@@ -106,14 +109,15 @@ class AuthView: UIView {
         return button
     }()
     
-    @objc func textFieldsDidChange() {
-        guard let email = emailTextField.text, let password = passwordTextField.text else { return }
-        
-        if let isCorrect = delegate?.checkValidation(email: email, password: password) {
-            loginButton.isEnabled = isCorrect
-            loginButton.backgroundColor = isCorrect ? .blueColor : .blueColor.withAlphaComponent(0.6)
-        }
-    }
+    private lazy var errorAlertLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 14, weight: .medium)
+        label.text = "Неправильный логин или пароль"
+        label.textColor = .systemRed
+        label.textAlignment = .center
+        label.isHidden = true
+        return label
+    }()
     
     // MARK: - Integration Label with lines
     
@@ -137,7 +141,7 @@ class AuthView: UIView {
         return view
     }()
     
-    private lazy var loginUsingIntegrationLabel: UILabel = {
+    private lazy var loginThroughLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12)
         label.text = "Войти через"
@@ -155,6 +159,7 @@ class AuthView: UIView {
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         button.backgroundColor = .grayColorForButton
         button.layer.cornerRadius = 6
+        button.addTarget(self, action: #selector(googleSignIn), for: .touchUpInside)
         return button
     }()
     
@@ -191,12 +196,21 @@ class AuthView: UIView {
         return button
     }()
     
+    private lazy var isTextFieldCorrect: Bool = true {
+        didSet {
+            changeTextFieldAppearance(with: emailTextField)
+            changeTextFieldAppearance(with: passwordTextField)
+            errorAlertLabel.isHidden = isTextFieldCorrect
+        }
+    }
+    
     // MARK: - Init
     
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .white
         
+        setupDelegates()
         addSubviews()
         applyConstraints()
         setupShowPassword()
@@ -204,6 +218,25 @@ class AuthView: UIView {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupDelegates() {
+        emailTextField.delegate = self
+        passwordTextField.delegate = self
+    }
+    
+    @objc func textFieldsDidChange() {
+        guard let email = emailTextField.text, let password = passwordTextField.text else { return }
+        isTextFieldCorrect = true
+        
+        if let isCorrect = delegate?.checkValidation(email: email, password: password) {
+            loginButton.isEnabled = isCorrect
+            loginButton.backgroundColor = isCorrect ? .blueColor : .blueColor.withAlphaComponent(0.6)
+        }
+    }
+    
+    @objc func googleSignIn() {
+        delegate?.signInGoogleAuthentication()
     }
     
     // MARK: - Method UITapGestureRecognizer
@@ -223,7 +256,15 @@ class AuthView: UIView {
         eyeIcon.tintColor = color
     }
     
+    func changeTextFieldAppearance(with textField: UITextField) {
+        textField.textColor = isTextFieldCorrect ? .black : .systemRed
+        textField.layer.borderColor = isTextFieldCorrect ? UIColor.lightGrayColor.cgColor : UIColor.systemRed.cgColor
+    }
+    
     @objc private func loginButtonTapped() {
+        delegate?.signInAuthentication { result in
+            self.isTextFieldCorrect = result
+        }
     }
     
     // MARK: - Subviews
@@ -236,9 +277,10 @@ class AuthView: UIView {
         
         verticalStackView.addArrangedSubview(forgotPasswordButton)
         verticalStackView.addArrangedSubview(loginButton)
+        verticalStackView.addArrangedSubview(errorAlertLabel)
         
         integrationStackView.addArrangedSubview(leftLine)
-        integrationStackView.addArrangedSubview(loginUsingIntegrationLabel)
+        integrationStackView.addArrangedSubview(loginThroughLabel)
         integrationStackView.addArrangedSubview(rightLine)
         verticalStackView.addArrangedSubview(integrationStackView)
         
@@ -277,11 +319,19 @@ class AuthView: UIView {
         forgotPasswordButton.snp.makeConstraints { make in
             make.trailing.equalToSuperview()
         }
-    
+        
         loginButton.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
             make.height.equalTo(52)
         }
+        
+        verticalStackView.setCustomSpacing(8, after: loginButton)
+        
+        errorAlertLabel.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+        }
+        
+        verticalStackView.setCustomSpacing(2, after: errorAlertLabel)
         
         leftLine.snp.makeConstraints { make in
             make.height.equalTo(1)
@@ -314,5 +364,21 @@ class AuthView: UIView {
             make.bottom.equalToSuperview().inset(35)
             make.leading.trailing.greaterThanOrEqualToSuperview().inset(50)
         }
+    }
+}
+
+extension AuthView: UITextFieldDelegate {
+    
+    // MARK: - Close keyboard when tap a button "Return"
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
+    }
+    
+    // MARK: - Close keyboard when tap on any place except textfield
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        endEditing(true)
     }
 }
